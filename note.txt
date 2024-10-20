@@ -1,0 +1,220 @@
+https://meet.google.com/gkb-uooi-tfp
+
+Steps for Amazon Linux 2023
+===================================================================
+1. check docker is installed or not
+#rpm  -q   docker
+or
+#yum   info   docker
+or
+#dnf    info   docker
+-------------------------------------------------------------------------------------
+2. For install docker
+#dnf   install   docker   -y
+-------------------------------------------------------------------------------------
+3. start and enable docker
+#systemctl    start    docker
+#systemctl    enable   docker
+#systemctl    status   docker
+--------------------------------------------------------------------------------------
+4. show docker version
+#docker   -v
+--------------------------------------------------------------------------------------
+5. show local container images
+#docker   images
+--------------------------------------------------------------------------------------
+6. show running containers
+#docker   ps
+--------------------------------------------------------------------------------------
+7. show running/stopped containers
+#docker   ps   -a
+--------------------------------------------------------------------------------------
+8. for search ubuntu images
+#docker   search  ubuntu
+--------------------------------------------------------------------------------------
+9 for pull ubuntu
+#docker   pull   ubuntu
+#docker   images
+--------------------------------------------------------------------------------------
+10. for create ubuntu container (-it mode, interact terminal )
+#docker   run  -it     ubuntu   /bin/bash
+	/#ls
+	/#cat   /etc/os-release
+	/#exit
+
+after run exit command -it mode container stopped.
+#docker   ps   -a
+--------------------------------------------------------------------------------------
+11. for start stopped container
+#docker   start   <con name/id>
+--------------------------------------------------------------------------------------
+12. for go inside container ( -it mode )
+#docker   attach    <con name/id>
+		/#exit
+--------------------------------------------------------------------------------------
+13. for remove stopped container
+#docker   rm   	 <con name/id>
+--------------------------------------------------------------------------------------
+14. for create ubuntu container (-dt mode, detach terminal )
+#docker   run  -dt     ubuntu   /bin/bash
+--------------------------------------------------------------------------------------
+15. for go inside container ( -dt mode )
+#docker  exec   -it    <con name/id>     /bin/bash
+	/#ls
+	/#cat   /etc/os-release
+	/#exit
+#docker    ps
+--------------------------------------------------------------------------------------
+16. for stop running container
+#docker    stop         <con name/id>
+or
+#docker    kill         <con name/id>
+--------------------------------------------------------------------------------------
+17. for give custom name to container
+#docker  run   -dt  --name=con1          ubuntu
+#docker  ps
+--------------------------------------------------------------------------------------
+18. for run httpd in container
+#docker   run  -dt  --name=c1    httpd
+--------------------------------------------------------------------------------------
+19. for run httpd and expose port to access web site
+#docker   run  -dt  --name=c2    -t  -p  80:80   httpd
+
+for verify, open firefox
+http://<instance public ip>
+--------------------------------------------------------------------------------------
+21. for create custom web page
+#docker   exec   -it    c2   /bin/bash
+	#ls
+	#cd   htdocs
+	#cat   >  index.html
+	<html><head><title>Pune</title></head>
+	<body bgcolor=red>
+	<h1> Welcome to container website</h1>
+	</body>
+	</html>
+	press "ctrl+d" for save and exit cat file
+		
+	#exit
+
+for verify, open firefox refresh page
+http://<instance public ip>
+--------------------------------------------------------------------------------------
+22. create container and host free template website
+#docker   run   -dt   --name=c3    -t   -p   81:80    httpd
+
+for go inside container
+#docker   exec   -it   c3   /bin/bash
+	#cat	/etc/os-release
+	#apt-get    update   -y
+	#apt-get   install        wget   unzip   -y
+	# wget https://www.free-css.com/assets/files/free-css-templates/download/page292/grandcoffee.zip
+	#ls
+	#unzip grandcoffee.zip
+	#cp -rvf       html/* /usr/local/apache2/htdocs/
+	#exit
+
+
+for verify, open firefox 
+http://<instance public ip>:81
+--------------------------------------------------------------------------------------
+23. create image form running container
+
+#docker   commit   c3   coffee
+#docker  images
+
+to verify launch container using created image
+#docker   run   -dt   --name=c4   -t  -p  82:80   coffee
+
+for verify, open firefox 
+http://<instance public ip>:82
+--------------------------------------------------------------------------------------
+24.  host website using nginx and create image
+
+#docker   run   -dt   --name=c4    -t   -p   8080:80    nginx
+
+for go inside container
+#docker   exec   -it   c4   /bin/bash
+	#cat	/etc/os-release
+	#apt-get    update   -y
+	#apt-get   install      wget   unzip  vim   -y
+	# wget https://www.free-css.com/assets/files/free-css-templates/download/page291/elearning.zip
+	#ls
+	#unzip elearning.zip
+	#cp -rvf elearning-html-template/* /usr/share/nginx/html/
+	#exit
+
+for create image
+#docker   commit   c4   elearning
+--------------------------------------------------------------------------------------
+25. Create container image by using Dockerfile ( apache httpd )
+
+#mkdir /pro1
+#cd  /pro1
+#vim   Dockerfile
+from httpd
+run apt-get update -y
+run apt-get install wget unzip -y
+run wget https://www.free-css.com/assets/files/free-css-templates/download/page289/apollo.zip
+run unzip apollo.zip
+run cp -rvf apollo-master/*  /usr/local/apache2/htdocs/
+:wq
+
+create image using Dockerfile
+#docker   build   -t   apollo .
+
+check image list
+#docker  images
+
+launch container using apollo image
+#docker run -dt --name=c1 -t -p 80:80 apollo
+--------------------------------------------------------------------------------------
+26. Create container image by using Dockerfile ( apache nginx )
+
+#mkdir /pro2
+#cd  /pro1
+#vim   Dockerfile
+from nginx
+run apt-get update -y
+run apt-get install wget unzip -y
+run wget https://www.free-css.com/assets/files/free-css-templates/download/page286/ca.zip
+run unzip ca.zip
+run cp -rvf html/*  /usr/share/nginx/html/
+:wq
+
+create image using Dockerfile
+#docker   build   -t   casino .
+
+check image list
+#docker  images
+
+launch container using apollo image
+#docker run -dt --name=c1 -t -p 81:80 casino
+-------------------------------------------------------------------------------------------
+27.  Create and push docker image into ECR
+
+Create IAM use and login from EC2- terminal
+
+1. create IAM user with administrative privilege to upload container image in ECR
+Service - IAM - user - create user (cli access) - create access/secrete key- download it.
+
+2. Login aws account via EC2 - cli
+#aws  configure
+
+AWS Access Key ID [None]: 
+AWS Secret Access Key [None]: 
+Default region name [None]: ap-south-1
+Default output format [None]: press enter for none
+-------------------------------------------------------------------------------------------
+28. Create Repository and Upload Image into ECR
+
+1. Create registory
+Service -  ECR - public registry - create repository - visibility settings (public) - registory name (myrepo) - create repository.
+click on created repository "myrepo" - click on "view push commands" and run one by one all command ec2 termial.
+
+#aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d5z4m9y3
+#docker build -t mypunerepo .
+#docker tag mypunerepo:latest public.ecr.aws/d5z4m9y3/mypunerepo:latest
+#docker push public.ecr.aws/d5z4m9y3/mypunerepo:latest
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+29. Launch container in ECS using ECR Image -

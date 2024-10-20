@@ -1,0 +1,160 @@
+Steps for manage container by using podman
+================================================================================================
+1. install required package
+#yum	install	podman   container-tools   -y
+--------------------------------------------------------------------------------------------------------------------------------
+2. check podman version
+#podman		-v
+#rpm	podman
+--------------------------------------------------------------------------------------------------------------------------------
+3. make sure that internet working ( vm settings - bridge netw connection )
+#nmcli   con   show
+#nmcli   con   down  server
+#nmcli   con   up   enp0s3
+--------------------------------------------------------------------------------------------------------------------------------
+4. show running container
+#podman   ps
+--------------------------------------------------------------------------------------------------------------------------------
+5. show running as well as stopped container
+#podman   ps    -a
+--------------------------------------------------------------------------------------------------------------------------------
+6. show container images
+#podman  images
+--------------------------------------------------------------------------------------------------------------------------------
+7. for create container ( -dt  detach terminal )
+#podman   run   -dt   ubuntu
+--------------------------------------------------------------------------------------------------------------------------------
+8. for create container ( -it   interact terminal  )
+#podman  run  -it   ubuntu   /bin/bash
+#exit
+--------------------------------------------------------------------------------------------------------------------------------
+9. for go inside container (-dt)
+#podman  exec   -it    <cont_name/id)     /bin/bash
+#ls
+#cat    /etc/os-release
+#exit
+--------------------------------------------------------------------------------------------------------------------------------
+10. for stop container
+#podman   stop    <cont_name/id)
+or
+#podman   kill       <cont_name/id)
+--------------------------------------------------------------------------------------------------------------------------------
+11. for remove stopped container
+#podman    rm        <cont_name/id)
+--------------------------------------------------------------------------------------------------------------------------------
+12. for stop and remove all container at a time
+#podman   kill    -a
+#podman   rm    -a
+--------------------------------------------------------------------------------------------------------------------------------
+13.  provide custom name to container
+#podman  run   -dt   --name=con1   ubuntu
+
+14. host website inside container
+#podman   run   -dt   --name=c1    -t  -p  81:80   httpd
+
+to verify open browser
+http://192.168.1.20:81
+
+host custome web page
+
+#podman  exec   -it     c1    /bin/bash
+	#cd   htdocs/
+	#ls
+	#cat  > index.html
+	<h1>Welcome to my first container website</h1>
+	# press "ctrl+d" key for save and exit
+	#exit
+
+to verify open browser (refresh web page)
+http://192.168.1.20:81
+--------------------------------------------------------------------------------------------------------------------------------
+15. host website inside container ( custom website template ) using httpd
+#podman   run   -dt   --name=c2    -t  -p  82:80   httpd
+#podman  exec   -it     c2   /bin/bash
+	#ls
+	#cat   /etc/os-release
+	#apt-get   update   -y
+	#apt-get   install   wget  unzip  -y
+	#wget   https://www.free-css.com/assets/files/free-css-templates/download/page292/grandcoffee.zip
+	#unzip  grandcoffee.zip
+	#cp  -rvf   html/*   htdocs/
+	#exit
+
+to verify open browser 
+http://192.168.1.20:82
+--------------------------------------------------------------------------------------------------------------------------------
+16. host website inside container using nginx
+#podman   run   -dt   --name=c3    -t  -p  83:80   nginx
+
+to verify open browser 
+http://192.168.1.20:83
+
+go inside container
+#podman  exec   -it     c3   /bin/bash
+
+	#ls
+	#cat   /etc/os-release
+	#apt-get   update   -y
+	#apt-get   install   wget  unzip  -y
+	# wget https://www.free-css.com/assets/files/free-css-templates/download/page290/tourist.zip  
+	#unzip   tourist.zip  
+	# cp -rvf travel-agency-html-template/* /usr/share/nginx/html/
+	#exit
+
+to verify open browser  (refresh page)
+http://192.168.1.20:83
+--------------------------------------------------------------------------------------------------------------------------------
+17. for create image from running container
+#podman    commit   c3    tourist
+#podman    images
+
+for run container from created image
+#podman   run  -dt   --name=c4    -t  -p  8080:80    tourist
+#podman   ps
+
+to verify open browser  
+http://192.168.1.20:8080
+--------------------------------------------------------------------------------------------------------------------------------
+18. share directory host os to container
+
+#mkdir   /pune
+#touch   /pune/note1.txt
+#chmod 777  /pune
+
+create container and share /pune (directory/volume) with container
+#podman   run   -dt   --name=c5   -v   /pune/:/mumbai/    --privileged=true    ubuntu
+#podman   ps
+#podman   exec   -it   c5   /bin/bash
+	#ls 
+	#ls   /mumbai/
+	#mkdir  /mumbai/red
+	#exit
+#ls   /pune/
+--------------------------------------------------------------------------------------------------------------------------------
+19. Setup mysql database in container
+
+#podman pull docker.io/library/mysql
+#podman images
+#podman run -dt -t -p 3306:3306 --name=mysql -e MYSQL_ROOT_PASSWORD='india' mysql
+
+#podman exec -it mysql /bin/bash
+
+bash-4.4#mysql -u root --password=india
+
+> show databases;
+> create database mydb;
+> show databases;
+> exit
+
+bash-4.4#exit
+---------------------------------------------------------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+19. to remove images
+#podman   rmi   ubuntu    nginx
+
+===============================================================================================
+Note:
+if we run container via root user - it called rootfull containerization
+if we run container via normal user - it called rootless containerization
+---------------------------------------------------------------------------------------------------------------------------------------------------
